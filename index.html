@@ -99,6 +99,7 @@
 <header class="top"><div class="wrap">
   <h1 id="title">報名</h1>
   <p id="phaseTop">載入中…</p>
+  <div id="periods"></div>
 </div></header>
 
 <main class="wrap">
@@ -208,6 +209,7 @@
     $('title').textContent = res.name + ' 報名';
     document.title = res.name + ' 報名';
     $('phaseTop').textContent = res.phase.open ? res.phase.label + '開放中' : '目前未開放報名';
+    var pe = $('periods'); pe.innerHTML = ''; (res.periods || []).forEach(function (t) { pe.appendChild(el('p', '', t)); });
     renderRules(res.rules);
     var pb = $('phaseBox'); pb.hidden = false; pb.textContent = res.phase.msg; pb.className = 'phase ' + (res.phase.open ? 'ok' : 'closed');
     var box = $('days'); box.innerHTML = '';
