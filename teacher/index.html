@@ -97,17 +97,17 @@
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <h1>自習老師專用</h1>
-  <p>登記違規、查詢紀錄、查看請假名單</p>
+  <h1>輪值人員專用</h1>
+  <p>點名、登記違規、查詢紀錄、查看請假名單</p>
 </div></header>
 
 <main class="wrap">
   <div id="banner" hidden></div>
 
   <section id="loginView" class="card" hidden>
-    <h2>老師登入</h2>
+    <h2>輪值人員登入</h2>
     <form id="loginForm" autocomplete="off" novalidate>
-      <label for="tName" style="margin-top:0">老師姓名</label>
+      <label for="tName" style="margin-top:0">姓名</label>
       <input id="tName" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
       <label for="tPin">通行碼</label>
       <input id="tPin" type="password" inputmode="numeric" autocomplete="off">
@@ -117,17 +117,34 @@
 
   <section id="mainView" hidden>
     <div class="who">
-      <div><strong id="who"></strong> 老師您好,今天 <span id="today"></span></div>
+      <div><strong id="who"></strong> 您好,今天 <span id="today"></span></div>
       <button class="link" id="logout" type="button">登出</button>
     </div>
     <div class="tabs" role="tablist">
-      <button id="tabReg" type="button" role="tab" aria-selected="true">登記違規</button>
-      <button id="tabQ" type="button" role="tab" aria-selected="false">查詢紀錄</button>
+      <button id="tabRoll" type="button" role="tab" aria-selected="true">點名</button>
+      <button id="tabReg" type="button" role="tab" aria-selected="false">登記違規</button>
+      <button id="tabQ" type="button" role="tab" aria-selected="false">查詢</button>
       <button id="tabL" type="button" role="tab" aria-selected="false">請假名單</button>
     </div>
 
+    <!-- 點名 -->
+    <div id="paneRoll">
+      <div class="card">
+        <h2>今天的應到名單</h2>
+        <div class="seg" id="rollSess" role="group" aria-label="節次"></div>
+        <label for="rCls">班級</label>
+        <select id="rCls"></select>
+        <button class="btn primary" id="rBtn" type="button">顯示名單</button>
+      </div>
+      <div class="card" id="rCard" hidden>
+        <h2 id="rTitle"></h2>
+        <p class="muted small" id="rNote" style="margin:0 0 6px"></p>
+        <div id="rOut"></div>
+      </div>
+    </div>
+
     <!-- 登記違規 -->
-    <div id="paneReg">
+    <div id="paneReg" hidden>
       <div class="card">
         <h2>節次</h2>
         <div class="seg" id="sess" role="group" aria-label="節次"></div>
@@ -179,7 +196,7 @@
 <script>
 (function () {
   // ★★ 把下面這行換成 Apps Script「管理部署作業」裡的網頁應用程式網址(結尾是 /exec)
-  var API_URL = 'https://script.google.com/macros/s/AKfycbw-rOt8vd2Vkb5JK-qF9ESUAle8UgyjXiCwS_l8ZcGX4Z2j7NsvGg4Qt9snroWbf8n6/exec';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbyJFWN3GC8rRIBErBt_wX7iLmVC4x0JU8H_H2CNJ5ki-HPOkMYWnxp-c2LyfFMOHPP0/exec';
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -221,47 +238,54 @@
   $('loginForm').addEventListener('submit', function (e) {
     e.preventDefault(); clearBanner();
     var name = $('tName').value.trim(), pin = $('tPin').value.trim();
-    if (!name || !pin) { showBanner('error', '請輸入老師姓名與通行碼。'); return; }
+    if (!name || !pin) { showBanner('error', '請輸入姓名與通行碼。'); return; }
     run({ action: 't_login', teacher: { name: name, pin: pin } }, function (res) {
       if (!res.ok) { showBanner('error', res.msg); return; }
       T = res; tc = { name: name, pin: pin }; $('tPin').value = '';
       $('who').textContent = res.name; $('today').textContent = res.today;
-      ['cls', 'qCls'].forEach(function (id) {
-        var s = $(id); s.innerHTML = ''; s.add(new Option(id === 'cls' ? '請選擇班級' : '全部班級', ''));
+      ['cls', 'qCls', 'rCls'].forEach(function (id) {
+        var s = $(id); s.innerHTML = ''; s.add(new Option(id === 'qCls' ? '全部班級' : '請選擇班級', ''));
         res.classes.forEach(function (c) { s.add(new Option(c, c)); });
       });
       session = res.session; buildSessions(); buildTypes();
       $('rule').textContent = '登記一次記 1 點;累計 ' + res.threshold + ' 點達退班門檻,通知信會註明。送出後會立刻寄 Email 給家長;登記錯了,' + res.undoMin + ' 分鐘內可以在下方撤銷,系統會補寄更正信。';
       $('note').maxLength = res.noteMax; $('seats').value = ''; $('note').value = ''; $('preview').innerHTML = ''; $('resultCard').hidden = true;
       $('lDate').value = res.todayIso; $('lCard').hidden = true; $('qOut').innerHTML = '';
-      renderMine(res.mine); tab('Reg'); show('main');
+      $('rCard').hidden = true; renderMine(res.mine); tab('Roll'); show('main');
     });
   });
   $('logout').addEventListener('click', function () { tc = null; T = null; clearBanner(); show('login'); });
 
   /* ───── 分頁 ───── */
   function tab(k) {
-    ['Reg', 'Q', 'L'].forEach(function (x) {
+    ['Roll', 'Reg', 'Q', 'L'].forEach(function (x) {
       $('tab' + x).setAttribute('aria-selected', x === k ? 'true' : 'false'); $('pane' + x).hidden = x !== k;
     });
     clearBanner();
   }
+  $('tabRoll').addEventListener('click', function () { tab('Roll'); });
   $('tabReg').addEventListener('click', function () { tab('Reg'); });
   $('tabQ').addEventListener('click', function () { tab('Q'); });
   $('tabL').addEventListener('click', function () { tab('L'); });
 
   /* ───── 登記違規 ───── */
   function buildSessions() {
-    var box = $('sess'); box.innerHTML = '';
-    T.sessions.forEach(function (s) {
-      var b = el('button'); b.type = 'button'; b.dataset.id = s.id;
-      b.appendChild(el('span', 'n', s.label)); b.appendChild(el('span', 't', s.time || ' '));
-      b.addEventListener('click', function () { session = s.id; refreshSessions(); });
-      box.appendChild(b);
+    ['sess', 'rollSess'].forEach(function (id) {
+      var box = $(id); box.innerHTML = '';
+      T.sessions.forEach(function (s) {
+        var b = el('button'); b.type = 'button'; b.dataset.id = s.id;
+        b.appendChild(el('span', 'n', s.label)); b.appendChild(el('span', 't', s.time || ' '));
+        b.addEventListener('click', function () { session = s.id; refreshSessions(); });
+        box.appendChild(b);
+      });
     });
     refreshSessions();
   }
-  function refreshSessions() { Array.prototype.forEach.call($('sess').children, function (b) { b.setAttribute('aria-pressed', b.dataset.id === session ? 'true' : 'false'); }); }
+  function refreshSessions() {
+    ['sess', 'rollSess'].forEach(function (id) {
+      Array.prototype.forEach.call($(id).children, function (b) { b.setAttribute('aria-pressed', b.dataset.id === session ? 'true' : 'false'); });
+    });
+  }
 
   function buildTypes() {
     var box = $('types'); box.innerHTML = ''; typeSel = {};
@@ -382,6 +406,50 @@
         if (s.status !== '有效') a.appendChild(el('span', 'chip off', s.status)); row.appendChild(a); c.appendChild(row);
       });
       out.appendChild(c);
+    });
+  });
+
+  /* ───── 點名 ───── */
+  function phoneLinks(text) {
+    var box = el('span');
+    String(text || '').split('/').forEach(function (p, i) {
+      p = p.trim(); if (!p) return;
+      if (i) box.appendChild(document.createTextNode(' / '));
+      var a = el('a', '', p); a.href = 'tel:' + p.replace(/[^\d+]/g, ''); box.appendChild(a);
+    });
+    return box;
+  }
+  $('rBtn').addEventListener('click', function () {
+    clearBanner();
+    if (!$('rCls').value) { showBanner('error', '請先選擇班級。'); return; }
+    run({ action: 't_roll', teacher: tc, cls: $('rCls').value, session: session }, function (res) {
+      if (!res.ok) { showBanner('error', res.msg); return; }
+      $('rCard').hidden = false;
+      $('rTitle').textContent = res.label + ' ' + res.session + (res.time ? '(' + res.time + ')' : '') + ':應到 ' + res.total + ' 人,請假 ' + res.onLeave + ' 人';
+      $('rNote').textContent = res.paused ? '今天暫停自習(' + res.paused + ')。' : '請假的同學已標示;沒到又沒請假的,按「登記違規」登記「無故缺曠」,家長電話可直接點擊撥打。';
+      var box = $('rOut'); box.innerHTML = '';
+      if (!res.students.length) box.appendChild(el('p', 'muted', '這個班今天沒有應到的學生。'));
+      res.students.forEach(function (s) {
+        var row = el('div', 'row' + (s.leave ? ' off' : '')), top = el('div', 'rowtop'), left = el('div');
+        var a = el('div', 'a', s.seat + '號 ' + s.name);
+        if (s.leave) { var c = el('span', 'chip off', '請假:' + s.leave); c.style.textDecoration = 'none'; a.appendChild(c); }
+        if (s.points) a.appendChild(el('span', 'chip ' + (s.reached ? 'hot' : ''), s.points + ' 點'));
+        left.appendChild(a);
+        if (s.contact) {
+          var d = el('details'); d.appendChild(el('summary', '', '家長聯絡'));
+          var b = el('div', 'sub'); b.appendChild(el('div', '', '家長:' + s.contact.parents));
+          var ph = el('div', '', '電話:'); ph.appendChild(phoneLinks(s.contact.phones)); b.appendChild(ph); d.appendChild(b); left.appendChild(d);
+        }
+        top.appendChild(left);
+        if (!s.leave) {
+          var btn = el('button', 'undo', '登記違規'); btn.type = 'button';
+          btn.addEventListener('click', function () {
+            $('cls').value = $('rCls').value; $('seats').value = s.seat; tab('Reg'); doLookup(); $('seats').scrollIntoView({ block: 'center' });
+          });
+          top.appendChild(btn);
+        }
+        row.appendChild(top); box.appendChild(row);
+      });
     });
   });
 
