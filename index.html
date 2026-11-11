@@ -116,6 +116,7 @@
 
   <section class="card" id="formCard" hidden>
     <h2>學生與家長資料</h2>
+    <p class="muted small" id="modeNote" style="margin:0 0 6px"></p>
     <div class="grid2">
       <div><label for="cls">班級</label><input id="cls" type="text" autocomplete="off" placeholder="例如 901"></div>
       <div><label for="seat">座號</label><input id="seat" type="text" inputmode="numeric" autocomplete="off" placeholder="例如 7"></div>
@@ -146,8 +147,16 @@
       </div>
     </div>
 
-    <button class="btn primary" id="submitBtn" type="button">送出</button>
+    <button class="btn primary" id="submitBtn" type="button">檢查並送出</button>
     <button class="btn danger" id="withdrawBtn" type="button">全部退選(退出自習)</button>
+  </section>
+
+  <section class="card" id="reviewCard" hidden>
+    <h2>送出前請再檢查一次</h2>
+    <div id="reviewBody"></div>
+    <p class="muted small">送出後會寄確認信到你填寫的信箱。</p>
+    <button class="btn primary" id="confirmBtn" type="button">確認無誤,送出</button>
+    <button class="btn add" id="backBtn" type="button">回去修改</button>
   </section>
 
   <section class="card" id="doneCard" hidden>
@@ -161,7 +170,7 @@
 <script>
 (function () {
   // ★★ 把下面這行換成 Apps Script「管理部署作業」裡的網頁應用程式網址(結尾是 /exec)
-  var API_URL = 'https://script.google.com/macros/s/AKfycbw-rOt8vd2Vkb5JK-qF9ESUAle8UgyjXiCwS_l8ZcGX4Z2j7NsvGg4Qt9snroWbf8n6/exec';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbyJFWN3GC8rRIBErBt_wX7iLmVC4x0JU8H_H2CNJ5ki-HPOkMYWnxp-c2LyfFMOHPP0/exec';
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -218,6 +227,11 @@
       b.addEventListener('click', function () { daySel[d.n] = !daySel[d.n]; b.setAttribute('aria-pressed', daySel[d.n] ? 'true' : 'false'); });
       b.dataset.n = d.n; box.appendChild(b);
     });
+    var change = res.phase.mode === 'change';
+    $('modeNote').textContent = change
+      ? '已錄取的同學要改天數或退選,送出後進入每週統一處理(預定次週一生效),不會立即生效;加報名要視座位狀況。只改聯絡資料會立即更新。'
+      : '截止前可以用驗證碼重複修改,以最後送出的資料為準。';
+    if (change) { $('startBtn').textContent = '申請異動 / 加報名'; $('submitBtn').textContent = '檢查並送出申請'; }
     updateStart();
   }).catch(function (e) { $('phaseTop').textContent = ''; showBanner('error', '系統暫時無法使用,請稍後再試。'); console.error(e); });
 
@@ -242,7 +256,7 @@
     run({ action: 'signup_load', cls: w.cls, seat: w.seat, name: w.name, code: val('code') }, function (res) {
       if (!res.ok) { showBanner('error', res.msg); return; }
       setDays(res.days); $('parents').value = res.parents; $('phones').value = res.phones; $('emails').value = res.emails; $('note').value = res.note;
-      showBanner('ok', res.status === '有效' ? '已載入你的報名資料,修改後按「送出」。' : '你目前是退出狀態,修改天數後按「送出」會重新加選。');
+      showBanner('ok', '目前狀態:' + res.status + '。已載入你的報名資料,修改後按「檢查並送出」。' + (res.pending ? ' 你有一筆處理中的申請:' + res.pending : ''));
     });
   });
 
@@ -255,6 +269,21 @@
     });
   });
 
+  var pending = null;
+  function showDone(title, res, w) {
+    var body = $('doneBody'); body.innerHTML = '';
+    $('doneTitle').textContent = title;
+    body.appendChild(el('p', '', w.cls + ' ' + w.seat + '號 ' + w.name + (res.daysText ? ',自習天數:' + res.daysText : '')));
+    if (res.message) body.appendChild(el('p', '', res.message));
+    if (res.code) {
+      body.appendChild(el('p', 'muted', '這是你的驗證碼,請截圖或抄下來。修改資料、異動申請與請假都要用:'));
+      body.appendChild(el('div', 'codebox', res.code));
+    }
+    if (res.mailed !== undefined) body.appendChild(el('p', 'muted small', res.mailed ? '確認信已寄到你填寫的信箱,沒收到請看垃圾信件匣。' : '確認信沒有寄出(' + res.mailText + '),' + (res.code ? '請務必先記下驗證碼。' : '請聯絡老師。')));
+    ['formCard', 'reviewCard', 'rulesCard'].forEach(function (id) { $(id).hidden = true; });
+    $('doneCard').hidden = false; window.scrollTo(0, 0);
+  }
+
   $('submitBtn').addEventListener('click', function () {
     clearBanner();
     var w = who(), days = chosenDays();
@@ -265,18 +294,24 @@
     if (!val('parents')) { showBanner('error', '請填寫家長姓名。'); return; }
     if (!val('phones')) { showBanner('error', '請填寫聯絡電話。'); return; }
     if (!val('emails')) { showBanner('error', '請填寫 Email(通知請假及違規用)。'); return; }
-    run({ action: 'signup_submit', cls: w.cls, seat: w.seat, name: w.name, days: days, parents: val('parents'), phones: val('phones'),
-          emails: val('emails'), note: $('note').value, code: val('code') }, function (res) {
-      if (!res.ok) { showBanner('error', res.msg); return; }
-      var body = $('doneBody'); body.innerHTML = '';
-      $('doneTitle').textContent = res.mode === 'new' ? '報名成功' : '資料已更新';
-      body.appendChild(el('p', '', w.cls + ' ' + w.seat + '號 ' + w.name + ',自習天數:' + res.daysText));
-      if (res.code) {
-        body.appendChild(el('p', 'muted', '這是你的驗證碼,請截圖或抄下來。請假與日後加退選都要用:'));
-        body.appendChild(el('div', 'codebox', res.code));
-      }
-      body.appendChild(el('p', 'muted small', res.mailed ? '確認信已寄到你填寫的信箱,沒收到請看垃圾信件匣。' : '確認信沒有寄出(' + res.mailText + '),請務必先記下驗證碼。'));
-      $('formCard').hidden = true; $('rulesCard').hidden = true; $('doneCard').hidden = false; window.scrollTo(0, 0);
+    pending = { action: 'signup_submit', cls: w.cls, seat: w.seat, name: w.name, days: days, parents: val('parents'), phones: val('phones'),
+                emails: val('emails'), note: $('note').value, code: val('code') };
+    var b = $('reviewBody'); b.innerHTML = '';
+    [['班級座號', w.cls + ' ' + w.seat + '號'], ['學生姓名', w.name],
+     ['自習天數', info.days.filter(function (d) { return daySel[d.n]; }).map(function (d) { return d.label; }).join('、')],
+     ['家長姓名', pending.parents], ['聯絡電話', pending.phones], ['Email', pending.emails], ['備註', pending.note || '(無)'],
+     ['驗證碼', pending.code ? '已填寫(修改或異動)' : '(新報名,送出後取得)']].forEach(function (x) {
+      var row = el('div', 'row'); row.appendChild(el('div', 'b', x[0])); row.appendChild(el('div', 'a', x[1])); b.appendChild(row);
+    });
+    $('formCard').hidden = true; $('reviewCard').hidden = false; window.scrollTo(0, 0);
+  });
+  $('backBtn').addEventListener('click', function () { $('reviewCard').hidden = true; $('formCard').hidden = false; window.scrollTo(0, 0); });
+  $('confirmBtn').addEventListener('click', function () {
+    clearBanner();
+    var w = who();
+    run(pending, function (res) {
+      if (!res.ok) { $('reviewCard').hidden = true; $('formCard').hidden = false; showBanner('error', res.msg); return; }
+      showDone(res.mode === 'new' ? '報名資料已送出' : (res.queued ? '申請已收到' : '資料已更新'), res, w);
     });
   });
 
@@ -286,17 +321,14 @@
     if (!w.cls || !w.seat || !w.name || !val('code')) { showBanner('error', '退出自習需要班級、座號、姓名和驗證碼。'); return; }
     run({ action: 'signup_withdraw', cls: w.cls, seat: w.seat, name: w.name, code: val('code') }, function (res) {
       if (!res.ok) { showBanner('error', res.msg); return; }
-      var body = $('doneBody'); body.innerHTML = '';
-      $('doneTitle').textContent = '已退出自習';
-      body.appendChild(el('p', '', w.cls + ' ' + w.seat + '號 ' + w.name + ' 已全部退選。之後如要重新加選,在開放加退選的期間輸入驗證碼即可。'));
-      $('formCard').hidden = true; $('rulesCard').hidden = true; $('doneCard').hidden = false; window.scrollTo(0, 0);
+      showDone('全部退選', { message: res.message }, w);
     });
   });
 
   $('againBtn').addEventListener('click', function () {
     ['cls', 'seat', 'name', 'parents', 'phones', 'emails', 'note', 'code'].forEach(function (id) { $(id).value = ''; });
     setDays([]); clearBanner();
-    $('doneCard').hidden = true; $('rulesCard').hidden = false; $('formCard').hidden = false; window.scrollTo(0, 0);
+    $('doneCard').hidden = true; $('reviewCard').hidden = true; $('rulesCard').hidden = false; $('formCard').hidden = false; window.scrollTo(0, 0);
   });
 
 })();
