@@ -127,6 +127,7 @@
       <div><strong id="who"></strong> 家長您好</div>
       <button class="link" id="logout" type="button">登出</button>
     </div>
+    <div class="phase closed" style="margin:0 0 10px">請由<strong>家長親自</strong>請假(請勿讓同學自行填寫)。請假不予退費。</div>
     <p class="muted small" id="daysInfo" style="margin:0 0 10px"></p>
 
     <div class="card">
@@ -168,7 +169,7 @@
 <script>
 (function () {
   // ★★ 把下面這行換成 Apps Script「管理部署作業」裡的網頁應用程式網址(結尾是 /exec)
-  var API_URL = 'https://script.google.com/macros/s/AKfycbw-rOt8vd2Vkb5JK-qF9ESUAle8UgyjXiCwS_l8ZcGX4Z2j7NsvGg4Qt9snroWbf8n6/exec';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbyJFWN3GC8rRIBErBt_wX7iLmVC4x0JU8H_H2CNJ5ki-HPOkMYWnxp-c2LyfFMOHPP0/exec';
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
