@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>自習老師專用</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#22305F; --paper:#F4F6FB; --card:#fff; --lamp:#E8A43A; --lamp-soft:#FCEFD3;
+    --slate:#566180; --line:#D6DBE9; --danger:#B3382C; --ok:#2E7D5B; --warn:#8A5A00;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:#1B2238;
+    font:16px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px}
+  .top{background:var(--ink);color:#fff;padding:22px 0 20px}
+  .top h1{margin:0;font-size:26px;line-height:1.25;font-weight:700;letter-spacing:.02em}
+  .top p{margin:6px 0 0;color:#C9D1EC;font-size:14px}
+  main{padding-top:16px;padding-bottom:40px}
+  h2{font-size:17px;margin:0 0 10px;font-weight:700}
+  h3{font-size:15.5px;margin:0 0 6px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 16px;margin-bottom:14px}
+  label{display:block;font-weight:600;font-size:15px;margin:16px 0 4px}
+  .grid2 label{margin-top:0}
+  input,select,textarea{width:100%;font:inherit;padding:11px 12px;border:1px solid #B8C0D6;border-radius:8px;background:#fff;color:inherit;min-height:46px}
+  input[type=checkbox]{width:22px;height:22px;min-height:0;flex:0 0 auto;margin:3px 0 0}
+  textarea{min-height:76px;resize:vertical}
+  :focus-visible{outline:3px solid var(--lamp);outline-offset:2px}
+  .btn{font:inherit;font-weight:700;min-height:48px;padding:0 20px;border-radius:10px;border:0;cursor:pointer}
+  .btn.primary{background:var(--ink);color:#fff;width:100%;margin-top:18px;font-size:17px}
+  .btn.add{background:#fff;color:var(--ink);border:1.5px solid var(--ink);width:100%;margin-top:10px}
+  .btn.danger{background:#fff;color:var(--danger);border:1.5px solid var(--danger);width:100%;margin-top:10px}
+  .btn.danger.armed{background:var(--danger);color:#fff}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .link{background:none;border:0;font:inherit;color:var(--ink);text-decoration:underline;padding:8px 4px;min-height:40px;cursor:pointer}
+  a{color:var(--ink)}
+  .muted{color:var(--slate)} .small{font-size:13.5px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .who{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+  .tools{display:flex;gap:8px;flex-wrap:wrap}
+  #banner{padding:12px 14px;border-radius:8px;margin-bottom:12px;font-weight:600}
+  #banner.ok{background:#DDF0E6;color:#1F5C41}
+  #banner.error{background:#FBE3DF;color:#8C2A20}
+  .rules p{margin:0 0 6px}
+  .rules h3{margin:14px 0 6px;color:var(--ink)}
+  .rules h3:first-child{margin-top:0}
+  .agree{display:flex;gap:10px;align-items:flex-start;font-weight:600;margin:16px 0 0}
+  .phase{margin-top:12px;padding:10px 12px;border-radius:8px;background:#EEF1F8;font-weight:600}
+  .phase.ok{background:#DDF0E6;color:#1F5C41}
+  .phase.closed{background:#FBE9D0;color:#7A4B00}
+  .box{margin-top:18px;padding:12px;border:1.5px dashed #AEB7D1;border-radius:10px}
+  .codebox{font-size:34px;font-weight:700;letter-spacing:.2em;text-align:center;padding:12px;border-radius:10px;background:var(--lamp-soft);border:2px solid var(--lamp);font-variant-numeric:tabular-nums}
+  .tchips{display:flex;flex-wrap:wrap;gap:8px}
+  .tchip{min-height:44px;padding:0 14px;border-radius:99px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;background:#fff;color:var(--ink);border:1.5px solid #AEB7D1}
+  .tchip[aria-pressed="true"]{background:var(--lamp-soft);border:2px solid var(--lamp);font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .dchip{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:99px;background:var(--lamp-soft);border:1.5px solid var(--lamp);color:var(--ink);font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+  .strip{display:flex;align-items:stretch;margin:6px 0 6px}
+  .gap{flex:0 0 2px;margin:0 4px;background:repeating-linear-gradient(to bottom,#AEB7D1 0 4px,transparent 4px 8px)}
+  .slot{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:6px;min-height:104px;padding:12px 6px;border:2px solid var(--ink);border-radius:6px;background:var(--ink);color:#fff;text-align:center;font:inherit;cursor:pointer}
+  .s-name{font-weight:700;font-size:16px}
+  .s-time{font-size:12.5px;font-variant-numeric:tabular-nums}
+  .s-state{font-size:15px;font-weight:700;border-top:1px solid rgba(255,255,255,.35);padding-top:6px}
+  .slot[aria-pressed="true"]{background:repeating-linear-gradient(135deg,var(--lamp-soft) 0 7px,#F6D58F 7px 14px);border-color:var(--lamp);color:var(--ink)}
+  .slot[aria-pressed="true"] .s-state{border-top-color:rgba(34,48,95,.35)}
+  .summary{margin:14px 0 0;padding:10px 12px;border-left:4px solid var(--lamp);background:var(--lamp-soft);border-radius:0 8px 8px 0;font-weight:600}
+  .seg{display:flex;gap:8px}
+  .seg button{flex:1 1 0;min-width:0;min-height:62px;padding:8px 4px;border-radius:8px;font:inherit;cursor:pointer;background:#fff;color:var(--ink);border:2px solid var(--ink);display:flex;flex-direction:column;justify-content:center;gap:2px}
+  .seg .n{font-weight:700;font-size:16px} .seg .t{font-size:12px;font-variant-numeric:tabular-nums}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tabs button{flex:1 1 0;min-height:46px;border-radius:10px;font:inherit;font-weight:700;cursor:pointer;background:#fff;color:var(--ink);border:1.5px solid #AEB7D1}
+  .tabs button[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  #preview{margin-top:8px}
+  .pv{padding:8px 10px;border-radius:8px;margin-top:6px;background:#EEF1F8;font-weight:600}
+  .pv .note{display:block;font-weight:400;font-size:13.5px;margin-top:2px;color:var(--warn)}
+  .pv.bad{background:#FBE3DF;color:#8C2A20}
+  .pv.hot{background:#FBE3DF}
+  .row{padding:12px 0;border-top:1px solid var(--line)}
+  .row:first-child{border-top:0;padding-top:0}
+  .row .a{font-weight:700} .row .b{font-size:14px;color:var(--slate)}
+  .row.off .a,.row.off .b{text-decoration:line-through}
+  .row .st{font-size:13.5px;margin-top:2px} .row .st.good{color:var(--ok)} .row .st.bad{color:var(--danger)}
+  .rowtop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .chip{display:inline-block;font-size:12.5px;font-weight:700;padding:1px 8px;border-radius:99px;background:#DDF0E6;color:var(--ok);margin-left:6px;vertical-align:1px;text-decoration:none}
+  .chip.off{background:#E8EAF1;color:var(--slate)}
+  .chip.hot{background:#FBE3DF;color:var(--danger)}
+  .undo,.cancel{flex:0 0 auto;min-height:40px;padding:0 14px;border-radius:8px;font:inherit;font-weight:700;font-size:14px;background:#fff;color:var(--ink);border:1.5px solid var(--ink);cursor:pointer}
+  .undo.armed,.cancel.armed{background:var(--danger);border-color:var(--danger);color:#fff}
+  details{margin-top:6px} summary{cursor:pointer;color:var(--ink);font-weight:600}
+  .sub{margin-top:8px;padding-left:10px;border-left:3px solid var(--line);font-size:14px}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <h1>輪值人員專用</h1>
+  <p>點名、登記違規、查詢紀錄、查看請假名單</p>
+</div></header>
+
+<main class="wrap">
+  <div id="banner" hidden></div>
+
+  <section id="loginView" class="card" hidden>
+    <h2>輪值人員登入</h2>
+    <form id="loginForm" autocomplete="off" novalidate>
+      <label for="tName" style="margin-top:0">姓名</label>
+      <input id="tName" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="tPin">通行碼</label>
+      <input id="tPin" type="password" inputmode="numeric" autocomplete="off">
+      <button class="btn primary" id="loginBtn" type="submit">登入</button>
+    </form>
+  </section>
+
+  <section id="mainView" hidden>
+    <div class="who">
+      <div><strong id="who"></strong> 您好,今天 <span id="today"></span></div>
+      <button class="link" id="logout" type="button">登出</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button id="tabRoll" type="button" role="tab" aria-selected="true">點名</button>
+      <button id="tabReg" type="button" role="tab" aria-selected="false">登記違規</button>
+      <button id="tabQ" type="button" role="tab" aria-selected="false">查詢</button>
+      <button id="tabL" type="button" role="tab" aria-selected="false">請假名單</button>
+    </div>
+
+    <!-- 點名 -->
+    <div id="paneRoll">
+      <div class="card">
+        <h2>今天的應到名單</h2>
+        <div class="seg" id="rollSess" role="group" aria-label="節次"></div>
+        <label for="rCls">班級</label>
+        <select id="rCls"></select>
+        <button class="btn primary" id="rBtn" type="button">顯示名單</button>
+      </div>
+      <div class="card" id="rCard" hidden>
+        <h2 id="rTitle"></h2>
+        <p class="muted small" id="rNote" style="margin:0 0 6px"></p>
+        <div id="rOut"></div>
+      </div>
+    </div>
+
+    <!-- 登記違規 -->
+    <div id="paneReg" hidden>
+      <div class="card">
+        <h2>節次</h2>
+        <div class="seg" id="sess" role="group" aria-label="節次"></div>
+        <label for="cls">班級</label>
+        <select id="cls"></select>
+        <label for="seats">座號</label>
+        <input id="seats" type="text" autocomplete="off" placeholder="多位用逗號或空格隔開,例如 3,7,12">
+        <div id="preview" aria-live="polite"></div>
+        <h2 style="margin-top:22px">項目(可複選)</h2>
+        <div class="tchips" id="types" role="group" aria-label="違規項目"></div>
+        <label for="note">說明(選填)</label>
+        <textarea id="note" placeholder="只寫看到的事實,例如「提醒兩次仍持續說話」"></textarea>
+        <button class="btn primary" id="submitBtn" type="button">登記並通知家長</button>
+        <p class="muted small" id="rule" style="margin:12px 0 0"></p>
+      </div>
+      <div class="card" id="resultCard" hidden><h2>剛剛登記的結果</h2><div id="results"></div></div>
+      <div class="card"><h2>今天我登記的紀錄</h2><div id="mine"></div></div>
+    </div>
+
+    <!-- 查詢紀錄 -->
+    <div id="paneQ" hidden>
+      <div class="card">
+        <h2>查詢學生</h2>
+        <div class="grid2">
+          <div><label for="qCls" style="margin-top:0">班級</label><select id="qCls"></select></div>
+          <div><label for="qSeat" style="margin-top:0">座號</label><input id="qSeat" type="text" inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <label for="qName">或輸入姓名</label>
+        <input id="qName" type="text" autocomplete="off" placeholder="姓名的一部分也可以">
+        <button class="btn primary" id="qBtn" type="button">查詢</button>
+        <button class="btn add" id="overBtn" type="button">看已達退班門檻的名單</button>
+      </div>
+      <div id="qOut"></div>
+    </div>
+
+    <!-- 請假名單 -->
+    <div id="paneL" hidden>
+      <div class="card">
+        <h2>請假名單</h2>
+        <label for="lDate" style="margin-top:0">日期</label>
+        <input id="lDate" type="date">
+        <button class="btn primary" id="lBtn" type="button">查看</button>
+      </div>
+      <div class="card" id="lCard" hidden><h2 id="lTitle"></h2><div id="lOut"></div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  // ★★ 把下面這行換成 Apps Script「管理部署作業」裡的網頁應用程式網址(結尾是 /exec)
+  var API_URL = 'PASTE_YOUR_EXEC_URL_HERE';
+
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  // 用 text/plain 送出,瀏覽器就不會多送一次預檢請求(Apps Script 不支援預檢)
+  function post(body) {
+    if (!API_URL || API_URL.indexOf('/exec') < 0) return Promise.reject(new Error('尚未設定 API_URL'));
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+  }
+  function showBanner(kind, msg) {
+    var b = $('banner'); b.className = kind; b.textContent = msg; b.hidden = false;
+    b.setAttribute('role', kind === 'error' ? 'alert' : 'status'); b.scrollIntoView({ block: 'nearest' });
+  }
+  function clearBanner() { $('banner').hidden = true; }
+  function setBusy(on) { Array.prototype.forEach.call(document.querySelectorAll('.btn.primary'), function (b) { b.disabled = on; }); }
+  function run(body, ok) {
+    setBusy(true);
+    post(body).then(function (res) { setBusy(false); ok(res); })
+      .catch(function (e) { setBusy(false); showBanner('error', '系統暫時無法使用,請稍後再試。'); console.error(e); });
+  }
+  // 兩段式確認按鈕:第一次按變紅,4 秒內再按一次才執行
+  function twoStep(btn, label, armedLabel, fn) {
+    btn.addEventListener('click', function () {
+      if (!btn.dataset.armed) {
+        btn.dataset.armed = '1'; btn.textContent = armedLabel; btn.classList.add('armed');
+        setTimeout(function () { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = label; btn.classList.remove('armed'); } }, 4000);
+        return;
+      }
+      delete btn.dataset.armed; btn.textContent = label; btn.classList.remove('armed'); fn();
+    });
+  }
+
+  var T = null, tc = null, session = '', typeSel = {}, lookupSeq = 0, lookupTimer = null;
+
+  function show(v) { $('loginView').hidden = v !== 'login'; $('mainView').hidden = v !== 'main'; window.scrollTo(0, 0); }
+  show('login');
+
+  /* ───── 登入 ───── */
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault(); clearBanner();
+    var name = $('tName').value.trim(), pin = $('tPin').value.trim();
+    if (!name || !pin) { showBanner('error', '請輸入姓名與通行碼。'); return; }
+    run({ action: 't_login', teacher: { name: name, pin: pin } }, function (res) {
+      if (!res.ok) { showBanner('error', res.msg); return; }
+      T = res; tc = { name: name, pin: pin }; $('tPin').value = '';
+      $('who').textContent = res.name; $('today').textContent = res.today;
+      ['cls', 'qCls', 'rCls'].forEach(function (id) {
+        var s = $(id); s.innerHTML = ''; s.add(new Option(id === 'qCls' ? '全部班級' : '請選擇班級', ''));
+        res.classes.forEach(function (c) { s.add(new Option(c, c)); });
+      });
+      session = res.session; buildSessions(); buildTypes();
+      $('rule').textContent = '登記一次記 1 點;累計 ' + res.threshold + ' 點達退班門檻,通知信會註明。送出後會立刻寄 Email 給家長;登記錯了,' + res.undoMin + ' 分鐘內可以在下方撤銷,系統會補寄更正信。';
+      $('note').maxLength = res.noteMax; $('seats').value = ''; $('note').value = ''; $('preview').innerHTML = ''; $('resultCard').hidden = true;
+      $('lDate').value = res.todayIso; $('lCard').hidden = true; $('qOut').innerHTML = '';
+      $('rCard').hidden = true; renderMine(res.mine); tab('Roll'); show('main');
+    });
+  });
+  $('logout').addEventListener('click', function () { tc = null; T = null; clearBanner(); show('login'); });
+
+  /* ───── 分頁 ───── */
+  function tab(k) {
+    ['Roll', 'Reg', 'Q', 'L'].forEach(function (x) {
+      $('tab' + x).setAttribute('aria-selected', x === k ? 'true' : 'false'); $('pane' + x).hidden = x !== k;
+    });
+    clearBanner();
+  }
+  $('tabRoll').addEventListener('click', function () { tab('Roll'); });
+  $('tabReg').addEventListener('click', function () { tab('Reg'); });
+  $('tabQ').addEventListener('click', function () { tab('Q'); });
+  $('tabL').addEventListener('click', function () { tab('L'); });
+
+  /* ───── 登記違規 ───── */
+  function buildSessions() {
+    ['sess', 'rollSess'].forEach(function (id) {
+      var box = $(id); box.innerHTML = '';
+      T.sessions.forEach(function (s) {
+        var b = el('button'); b.type = 'button'; b.dataset.id = s.id;
+        b.appendChild(el('span', 'n', s.label)); b.appendChild(el('span', 't', s.time || ' '));
+        b.addEventListener('click', function () { session = s.id; refreshSessions(); });
+        box.appendChild(b);
+      });
+    });
+    refreshSessions();
+  }
+  function refreshSessions() {
+    ['sess', 'rollSess'].forEach(function (id) {
+      Array.prototype.forEach.call($(id).children, function (b) { b.setAttribute('aria-pressed', b.dataset.id === session ? 'true' : 'false'); });
+    });
+  }
+
+  function buildTypes() {
+    var box = $('types'); box.innerHTML = ''; typeSel = {};
+    T.types.forEach(function (t) {
+      var b = el('button', 'tchip', t); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () { typeSel[t] = !typeSel[t]; b.setAttribute('aria-pressed', typeSel[t] ? 'true' : 'false'); });
+      box.appendChild(b);
+    });
+  }
+  function chosenTypes() { return T.types.filter(function (t) { return typeSel[t]; }); }
+
+  function scheduleLookup() { clearTimeout(lookupTimer); lookupTimer = setTimeout(doLookup, 450); }
+  function doLookup() {
+    var cls = $('cls').value, seats = $('seats').value.trim(), box = $('preview');
+    if (!cls || !seats) { box.innerHTML = ''; return; }
+    var my = ++lookupSeq;
+    post({ action: 't_lookup', teacher: tc, cls: cls, seats: seats }).then(function (res) {
+      if (my !== lookupSeq) return;
+      box.innerHTML = '';
+      if (!res.ok) { box.appendChild(el('div', 'pv bad', res.msg)); return; }
+      res.students.forEach(function (s) {
+        if (!s.found) { box.appendChild(el('div', 'pv bad', '找不到座號 ' + s.seat + '(沒報名或已退出)')); return; }
+        var d = el('div', 'pv' + (s.reached ? ' hot' : ''), s.seat + '號 ' + s.name + '  目前 ' + s.points + ' 點');
+        if (s.reached) d.appendChild(el('span', 'note', '已達退班門檻(' + res.threshold + ' 點)'));
+        if (s.leave) d.appendChild(el('span', 'note', '今天已請假:' + s.leave));
+        if (s.notToday) d.appendChild(el('span', 'note', '這位學生沒有報名今天(星期幾)的自習'));
+        if (!s.hasEmail) d.appendChild(el('span', 'note', '沒有可用的家長信箱,不會寄通知'));
+        box.appendChild(d);
+      });
+    }).catch(function () { /* 確認失敗不擋登記,送出時伺服器還會再檢查 */ });
+  }
+  $('seats').addEventListener('input', scheduleLookup);
+  $('cls').addEventListener('change', doLookup);
+
+  $('submitBtn').addEventListener('click', function () {
+    clearBanner();
+    var cls = $('cls').value, seats = $('seats').value.trim(), types = chosenTypes();
+    if (!session) { showBanner('error', '請選擇節次。'); return; }
+    if (!cls) { showBanner('error', '請選擇班級。'); return; }
+    if (!seats) { showBanner('error', '請輸入座號。'); return; }
+    if (!types.length) { showBanner('error', '請至少選擇一個項目。'); return; }
+    run({ action: 't_submit', teacher: tc, payload: { cls: cls, seats: seats, session: session, types: types, note: $('note').value } }, function (res) {
+      if (!res.ok) { showBanner('error', res.msg); return; }
+      showBanner('ok', '已登記 ' + res.results.length + ' 位學生。');
+      var box = $('results'); box.innerHTML = '';
+      res.results.forEach(function (r) {
+        var row = el('div', 'row'); row.appendChild(el('div', 'a', r.seat + '號 ' + r.name + ':累計 ' + r.points + ' 點'));
+        if (r.reached) row.appendChild(el('div', 'st bad', '已達退班門檻(' + res.threshold + ' 點),通知信已註明'));
+        row.appendChild(el('div', 'st ' + (/^已/.test(r.notify) ? 'good' : 'bad'), r.notify)); box.appendChild(row);
+      });
+      $('resultCard').hidden = false; renderMine(res.mine);
+      $('seats').value = ''; $('note').value = ''; $('preview').innerHTML = ''; buildTypes(); $('seats').focus();
+    });
+  });
+
+  function renderMine(list) {
+    var box = $('mine'); box.innerHTML = '';
+    if (!list.length) { var p = el('p', 'muted', '今天還沒有登記紀錄。'); p.style.margin = '0'; box.appendChild(p); return; }
+    list.forEach(function (r) {
+      var off = r.status !== '有效', row = el('div', 'row' + (off ? ' off' : '')), top = el('div', 'rowtop'), left = el('div');
+      var a = el('div', 'a', r.cls + ' ' + r.seat + '號 ' + r.name); a.appendChild(el('span', 'chip' + (off ? ' off' : ''), r.status));
+      left.appendChild(a); left.appendChild(el('div', 'b', r.time + ' ' + r.session + ' ' + r.types));
+      left.appendChild(el('div', 'st ' + (/^已/.test(String(r.notify || '')) ? 'good' : 'bad'), r.notify || '')); top.appendChild(left);
+      if (r.canUndo) {
+        var btn = el('button', 'undo', '撤銷'); btn.type = 'button';
+        twoStep(btn, '撤銷', '確定撤銷?', function () {
+          clearBanner();
+          run({ action: 't_cancel', teacher: tc, id: r.id }, function (res) {
+            if (!res.ok) { showBanner('error', res.msg); return; }
+            showBanner('ok', '已撤銷。如果家長先前已收到通知,系統已補寄更正信。'); renderMine(res.mine);
+          });
+        });
+        top.appendChild(btn);
+      }
+      row.appendChild(top); box.appendChild(row);
+    });
+  }
+
+  /* ───── 查詢紀錄 ───── */
+  function studentCard(s, threshold) {
+    var c = el('div', 'card'), h = el('h2', '', s.cls + ' ' + s.seat + '號 ' + s.name);
+    h.appendChild(el('span', 'chip ' + (s.reached ? 'hot' : ''), s.points + ' / ' + threshold + ' 點' + (s.reached ? ' 已達退班門檻' : '')));
+    c.appendChild(h); c.appendChild(el('p', 'muted small', '自習天數:' + s.daysText + (s.status !== '有效' ? '' : '')));
+    if (s.contact) {
+      var d = el('details'); d.appendChild(el('summary', '', '家長聯絡方式'));
+      var b = el('div', 'sub'); b.appendChild(el('div', '', '家長:' + s.contact.parents)); b.appendChild(el('div', '', '電話:' + s.contact.phones)); b.appendChild(el('div', '', 'Email:' + (s.contact.emails || '(無)')));
+      d.appendChild(b); c.appendChild(d);
+    }
+    var box = el('div'); box.style.marginTop = '10px';
+    if (!s.records.length) box.appendChild(el('p', 'muted', '沒有違規紀錄。'));
+    s.records.forEach(function (r) {
+      var off = r.status !== '有效', row = el('div', 'row' + (off ? ' off' : ''));
+      var a = el('div', 'a', r.label + ' ' + r.session); a.appendChild(el('span', 'chip' + (off ? ' off' : ''), r.status));
+      row.appendChild(a); row.appendChild(el('div', 'b', r.types + (r.note ? '|' + r.note : '') + '|登記:' + r.teacher)); box.appendChild(row);
+    });
+    c.appendChild(box); return c;
+  }
+  $('qBtn').addEventListener('click', function () {
+    clearBanner();
+    var cls = $('qCls').value, seat = $('qSeat').value.trim(), name = $('qName').value.trim();
+    run({ action: 't_search', teacher: tc, cls: cls, seat: seat, name: name }, function (res) {
+      var out = $('qOut'); out.innerHTML = '';
+      if (!res.ok) { showBanner('error', res.msg); return; }
+      if (!res.students.length) { out.appendChild(el('div', 'card', '找不到符合的學生。')); return; }
+      res.students.forEach(function (s) { out.appendChild(studentCard(s, res.threshold)); });
+      if (res.more) out.appendChild(el('p', 'muted small', '還有 ' + res.more + ' 位符合,請輸入更完整的條件。'));
+    });
+  });
+  $('overBtn').addEventListener('click', function () {
+    clearBanner();
+    run({ action: 't_over', teacher: tc }, function (res) {
+      var out = $('qOut'); out.innerHTML = '';
+      if (!res.ok) { showBanner('error', res.msg); return; }
+      var c = el('div', 'card'); c.appendChild(el('h2', '', '已達退班門檻(累計 ' + res.threshold + ' 點以上)'));
+      if (!res.students.length) c.appendChild(el('p', 'muted', '目前沒有人達到。'));
+      res.students.forEach(function (s) {
+        var row = el('div', 'row'); var a = el('div', 'a', s.cls + ' ' + s.seat + '號 ' + s.name); a.appendChild(el('span', 'chip hot', s.points + ' 點'));
+        if (s.status !== '有效') a.appendChild(el('span', 'chip off', s.status)); row.appendChild(a); c.appendChild(row);
+      });
+      out.appendChild(c);
+    });
+  });
+
+  /* ───── 點名 ───── */
+  function phoneLinks(text) {
+    var box = el('span');
+    String(text || '').split('/').forEach(function (p, i) {
+      p = p.trim(); if (!p) return;
+      if (i) box.appendChild(document.createTextNode(' / '));
+      var a = el('a', '', p); a.href = 'tel:' + p.replace(/[^\d+]/g, ''); box.appendChild(a);
+    });
+    return box;
+  }
+  $('rBtn').addEventListener('click', function () {
+    clearBanner();
+    if (!$('rCls').value) { showBanner('error', '請先選擇班級。'); return; }
+    run({ action: 't_roll', teacher: tc, cls: $('rCls').value, session: session }, function (res) {
+      if (!res.ok) { showBanner('error', res.msg); return; }
+      $('rCard').hidden = false;
+      $('rTitle').textContent = res.label + ' ' + res.session + (res.time ? '(' + res.time + ')' : '') + ':應到 ' + res.total + ' 人,請假 ' + res.onLeave + ' 人';
+      $('rNote').textContent = res.paused ? '今天暫停自習(' + res.paused + ')。' : '請假的同學已標示;沒到又沒請假的,按「登記違規」登記「無故缺曠」,家長電話可直接點擊撥打。';
+      var box = $('rOut'); box.innerHTML = '';
+      if (!res.students.length) box.appendChild(el('p', 'muted', '這個班今天沒有應到的學生。'));
+      res.students.forEach(function (s) {
+        var row = el('div', 'row' + (s.leave ? ' off' : '')), top = el('div', 'rowtop'), left = el('div');
+        var a = el('div', 'a', s.seat + '號 ' + s.name);
+        if (s.leave) { var c = el('span', 'chip off', '請假:' + s.leave); c.style.textDecoration = 'none'; a.appendChild(c); }
+        if (s.points) a.appendChild(el('span', 'chip ' + (s.reached ? 'hot' : ''), s.points + ' 點'));
+        left.appendChild(a);
+        if (s.contact) {
+          var d = el('details'); d.appendChild(el('summary', '', '家長聯絡'));
+          var b = el('div', 'sub'); b.appendChild(el('div', '', '家長:' + s.contact.parents));
+          var ph = el('div', '', '電話:'); ph.appendChild(phoneLinks(s.contact.phones)); b.appendChild(ph); d.appendChild(b); left.appendChild(d);
+        }
+        top.appendChild(left);
+        if (!s.leave) {
+          var btn = el('button', 'undo', '登記違規'); btn.type = 'button';
+          btn.addEventListener('click', function () {
+            $('cls').value = $('rCls').value; $('seats').value = s.seat; tab('Reg'); doLookup(); $('seats').scrollIntoView({ block: 'center' });
+          });
+          top.appendChild(btn);
+        }
+        row.appendChild(top); box.appendChild(row);
+      });
+    });
+  });
+
+  /* ───── 請假名單 ───── */
+  $('lBtn').addEventListener('click', function () {
+    clearBanner();
+    run({ action: 't_leaves', teacher: tc, date: $('lDate').value }, function (res) {
+      if (!res.ok) { showBanner('error', res.msg); return; }
+      $('lCard').hidden = false;
+      $('lTitle').textContent = res.label + ':報名 ' + res.registered + ' 人,請假 ' + res.leaves.length + ' 人';
+      var box = $('lOut'); box.innerHTML = '';
+      if (res.paused) box.appendChild(el('p', 'muted', '這天暫停自習(' + res.paused + ')。'));
+      else if (!res.leaves.length) box.appendChild(el('p', 'muted', '這天沒有人請假。'));
+      res.leaves.forEach(function (r) {
+        var row = el('div', 'row'); row.appendChild(el('div', 'a', r.cls + ' ' + r.seat + '號 ' + r.name)); row.appendChild(el('div', 'b', r.sessions + '|' + r.reason)); box.appendChild(row);
+      });
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
