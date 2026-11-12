@@ -196,7 +196,7 @@
 <script>
 (function () {
   // ★★ 把下面這行換成 Apps Script「管理部署作業」裡的網頁應用程式網址(結尾是 /exec)
-  var API_URL = 'PASTE_YOUR_EXEC_URL_HERE';
+  var API_URL = 'https://script.google.com/macros/s/AKfycby2Q53ln-voTvXCBqj7AtTp-8I5k8BQjUiy3n5wjUnrHseWH02y0fInAJxRE2qxhsWl/exec';
 
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
